@@ -93,9 +93,18 @@ configure_opkg() {
     log "Настройка opkg..."
     mkdir -p /mnt/usb/packages || error_exit "Не удалось создать директорию пакетов"
     
+    # Удаление существующих дублирующих опций перед добавлением
+    sed -i '/^dest usb/d' /etc/opkg.conf
+    sed -i '/^option overlay_root/d' /etc/opkg.conf
+    
     # Добавление настроек в opkg.conf
     echo "dest usb /mnt/usb/packages" >> /etc/opkg.conf
-    echo "option overlay_root /mnt/usb" >> /etc/opkg.conf
+    
+    # Проверка текущего значения overlay_root перед добавлением
+    current_overlay=$(uci get fstab.@mount[0].target 2>/dev/null)
+    if [ -z "$current_overlay" ]; then
+        echo "option overlay_root /mnt/usb" >> /etc/opkg.conf
+    fi
 }
 
 # Главная функция
